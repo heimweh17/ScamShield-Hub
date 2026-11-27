@@ -1,3 +1,4 @@
+import Dialog from "../components/Dialog";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
@@ -22,6 +23,7 @@ function AdminDashboardPage() {
   const [userSearch, setUserSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [form, setForm] = useState(emptyForm);
+  const [section, setSection] = useState("Cases");
   const [editingCaseId, setEditingCaseId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [error, setError] = useState("");
@@ -85,6 +87,7 @@ function AdminDashboardPage() {
   }
 
   function startEditCase(item) {
+    setSection("Editor");
     setEditingCaseId(item._id);
     setForm({
       title: item.title,
@@ -204,11 +207,8 @@ function AdminDashboardPage() {
       <div className="panel">
         <div className="section-head">
           <div>
-            <p className="eyebrow">Control Center</p>
-            <h2>Admin Dashboard</h2>
-            <p className="supporting-copy">
-              Manage training content, moderate community activity, and monitor user progress.
-            </p>
+<h2>Admin Dashboard</h2>
+
           </div>
           <button className="btn btn-ghost" type="button" onClick={refreshAll}>
             Refresh Data
@@ -243,13 +243,18 @@ function AdminDashboardPage() {
         </div>
       </div>
 
+      <nav className="group-tabs" aria-label="Management sections">
+        {["Cases", "Editor", "Users", "Comments"].map((name) => (
+          <button className="group-tab" key={name} aria-pressed={section === name} onClick={() => setSection(name)}>{name}</button>
+        ))}
+      </nav>
       <div className="admin-grid">
-        <section className="panel">
+        <section className="panel" hidden={section !== "Editor"}>
           <div className="section-head">
             <div>
               <h3>{editingCaseId ? "Edit Case" : "Create Case"}</h3>
               <p className="supporting-copy">
-                Admins can now edit published cases directly, not just publish or delete them.
+                Save a draft or publish it to the case library.
               </p>
             </div>
             {editingCaseId ? (
@@ -339,7 +344,7 @@ function AdminDashboardPage() {
           </form>
         </section>
 
-        <section className="panel">
+        <section className="panel" hidden={section !== "Users"}>
           <div className="section-head">
             <div>
               <h3>Recent Users</h3>
@@ -418,7 +423,7 @@ function AdminDashboardPage() {
       </div>
 
       <div className="admin-grid">
-        <section className="panel">
+        <section className="panel" hidden={section !== "Cases"}>
           <div className="section-head">
             <div>
               <h3>All Cases ({filteredCases.length})</h3>
@@ -467,7 +472,7 @@ function AdminDashboardPage() {
           </div>
         </section>
 
-        <section className="panel">
+        <section className="panel" hidden={section !== "Comments"}>
           <div className="section-head">
             <div>
               <h3>Recent Comments</h3>
@@ -497,13 +502,10 @@ function AdminDashboardPage() {
       </div>
 
       {confirmAction ? (
-        <div className="overlay">
-          <div className="modal-card">
+        <Dialog title={confirmAction.title} onClose={() => setConfirmAction(null)}>
             <div className="modal-header">
               <h3>{confirmAction.title}</h3>
-              <button className="icon-button" type="button" onClick={() => setConfirmAction(null)}>
-                x
-              </button>
+              <button className="icon-button" type="button" onClick={() => setConfirmAction(null)}>Close</button>
             </div>
             <p className="supporting-copy confirm-message">{confirmAction.message}</p>
             <div className="admin-actions">
@@ -518,8 +520,7 @@ function AdminDashboardPage() {
                 {confirmAction.confirmLabel}
               </button>
             </div>
-          </div>
-        </div>
+          </Dialog>
       ) : null}
     </section>
   );

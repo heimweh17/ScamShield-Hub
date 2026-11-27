@@ -24,7 +24,6 @@ function ThreadList({ threads, selectedUserId, onSelect }) {
       <div className="section-head compact">
         <div>
           <h3>Conversations</h3>
-          <p className="supporting-copy">Recent chats stay at the top so active threads remain easy to find.</p>
         </div>
       </div>
       {!threads.length ? (
@@ -326,7 +325,6 @@ function MessagesPage() {
       <header className="page-title-row">
         <div>
           <h2>Direct Messages</h2>
-          <p className="supporting-copy">Search users, connect as friends, and keep private study conversations in one place.</p>
         </div>
       </header>
 
@@ -335,6 +333,8 @@ function MessagesPage() {
 
       <div className="dm-grid">
         <aside className="dm-sidebar">
+          <ThreadList threads={threads} selectedUserId={selectedUserId} onSelect={handleSelect} />
+          <details className="contacts"><summary>Find people and manage requests ({friendRequests.length})</summary>
           <UserSearch
             query={query}
             setQuery={setQuery}
@@ -345,7 +345,7 @@ function MessagesPage() {
             searching={searching}
           />
           <FriendRequests requests={friendRequests} onAccept={acceptFriendRequest} />
-          <ThreadList threads={threads} selectedUserId={selectedUserId} onSelect={handleSelect} />
+          </details>
         </aside>
 
         <div className="panel dm-chat-panel">
@@ -365,6 +365,7 @@ function MessagesPage() {
               <Conversation participant={participant || activeThread?.participant} messages={messages} myUserId={me?.id} />
               <form className="dm-compose" onSubmit={handleSend}>
                 <textarea
+                  aria-label="Message text"
                   placeholder="Write a message"
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}

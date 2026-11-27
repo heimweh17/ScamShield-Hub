@@ -1,3 +1,4 @@
+import Dialog from "../components/Dialog";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { EmptyState, LoadingBlock, StatusBanner } from "../components/Feedback";
@@ -66,13 +67,10 @@ function MemberPicker({ group, onClose, onMembersChanged }) {
   }
 
   return (
-    <div className="overlay">
-      <div className="modal-card">
+    <Dialog title="Group members" onClose={onClose}>
         <div className="modal-header">
           <h3>Manage "{group.name}"</h3>
-          <button className="icon-button" onClick={onClose} type="button">
-            x
-          </button>
+          <button className="icon-button" onClick={onClose} type="button">Close</button>
         </div>
 
         <p className="supporting-copy">
@@ -120,8 +118,7 @@ function MemberPicker({ group, onClose, onMembersChanged }) {
             </ul>
           )}
         </div>
-      </div>
-    </div>
+      </Dialog>
   );
 }
 
@@ -259,38 +256,11 @@ function LeaderboardPage() {
       <div className="section-head">
         <div>
           <h2>Leaderboard</h2>
-          <p className="supporting-copy">
-            Global ranks everyone, Friends narrows the board to your accepted connections, and
-            Groups let you build smaller comparison boards for classmates or project teammates.
-          </p>
+
         </div>
         <button className="btn btn-primary" onClick={createGroup} type="button">
           Create Group
         </button>
-      </div>
-
-      <div className="metrics-grid leaderboard-summary">
-        <div className="metric">
-          <span className="metric-label">Current mode</span>
-          <strong>{activeModeLabel}</strong>
-          <span className="metric-hint">
-            {activeGroup === "__friends__"
-              ? "Only you and your friends"
-              : activeGroup
-                ? "Members inside the selected group"
-                : "All users ranked together"}
-          </span>
-        </div>
-        <div className="metric">
-          <span className="metric-label">Groups</span>
-          <strong>{groups.length}</strong>
-          <span className="metric-hint">Custom boards available</span>
-        </div>
-        <div className="metric">
-          <span className="metric-label">Rows shown</span>
-          <strong>{rows.length}</strong>
-          <span className="metric-hint">Learners currently ranked</span>
-        </div>
       </div>
 
       <div className="group-tabs">
@@ -347,7 +317,7 @@ function LeaderboardPage() {
       {!loading ? (
         rows.length ? (
           <div className="table-wrap">
-            <table>
+            <table><caption>{activeModeLabel} rankings</caption>
               <thead>
                 <tr>
                   <th>Rank</th>

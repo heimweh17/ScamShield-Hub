@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 
 function AuthPage() {
-  const [mode, setMode] = useState("login");
+  const [params, setParams] = useSearchParams();
+  const mode = params.get("mode") === "register" ? "register" : "login";
   const [step, setStep] = useState("form");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -51,7 +52,7 @@ function AuthPage() {
         body: JSON.stringify({ email, code }),
       });
       setNotice(result.message || "Email verified. You can log in now.");
-      setMode("login");
+      setParams({});
       setStep("form");
       setCode("");
     } catch (err) {
@@ -85,8 +86,7 @@ function AuthPage() {
 
   return (
     <section className="panel auth-panel">
-      <p className="eyebrow">Secure Access</p>
-      <h2>{mode === "login" ? "Login" : step === "verify" ? "Enter Verification Code" : "Create Account"}</h2>
+      <h2>{mode === "login" ? "Sign in" : step === "verify" ? "Enter Verification Code" : "Create Account"}</h2>
       <p className="supporting-copy">
         {mode === "login"
           ? "Sign in with your verified account."
@@ -108,6 +108,7 @@ function AuthPage() {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="123456"
               inputMode="numeric"
+              autoComplete="one-time-code"
               required
             />
           </label>
@@ -148,7 +149,7 @@ function AuthPage() {
           {error ? <p className="error">{error}</p> : null}
           {notice ? <p className="notice">{notice}</p> : null}
           <button className="btn btn-primary" type="submit" disabled={busy}>
-            {busy ? "Please wait..." : mode === "login" ? "Login" : "Send Verification Code"}
+            {busy ? "Please wait..." : mode === "login" ? "Sign in" : "Send Verification Code"}
           </button>
         </form>
       )}
@@ -158,7 +159,7 @@ function AuthPage() {
           className="link-button"
           type="button"
           onClick={() => {
-            setMode(mode === "login" ? "register" : "login");
+            setParams(mode === "login" ? { mode: "register" } : {});
             setStep("form");
             setCode("");
             resetMessages();
@@ -167,7 +168,7 @@ function AuthPage() {
           {mode === "login" ? "Need an account? Register" : "Already have an account? Login"}
         </button>
 
-        {mode === "register" ? (
+        {mode === "register" && step === "verify" ? (
           <button className="link-button" type="button" onClick={resendVerification} disabled={busy}>
             Resend verification code
           </button>

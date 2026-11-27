@@ -12,7 +12,10 @@ function CaseFeedPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [retry, setRetry] = useState(0);
+
   useEffect(() => {
+    let current = true;
     const params = new URLSearchParams();
     if (difficulty) params.set("difficulty", difficulty);
     if (contentType) params.set("contentType", contentType);
@@ -20,10 +23,11 @@ function CaseFeedPage() {
     setLoading(true);
     setError("");
     api(`/cases?${params.toString()}`)
-      .then((result) => setCases(result.cases))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [difficulty, contentType]);
+      .then((result) => { if (current) setCases(result.cases); })
+      .catch((err) => { if (current) setError(err.message); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [difficulty, contentType, retry]);
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -54,30 +58,29 @@ function CaseFeedPage() {
     <section>
       <div className="page-title-row">
         <div>
-          <h2>Case Feed</h2>
-          <p className="supporting-copy">
-            New cases stay at the top. Completed ones remain available below so users can review and learn from them again.
-          </p>
+          <h2>Case library</h2>
+
         </div>
         <div className="filters filters-extended">
           <input
+            aria-label="Search cases"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by title, content, or type"
           />
-          <select value={contentType} onChange={(e) => setContentType(e.target.value)}>
+          <select aria-label="Case format" value={contentType} onChange={(e) => setContentType(e.target.value)}>
             <option value="">All Types</option>
             <option value="email">Email</option>
             <option value="sms">SMS</option>
             <option value="website">Website</option>
           </select>
-          <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+          <select aria-label="Difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
             <option value="">All Difficulties</option>
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
           </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <select aria-label="Sort cases" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="newest">Newest First</option>
             <option value="title">Title A-Z</option>
             <option value="difficulty">Easy to Hard</option>
@@ -85,32 +88,14 @@ function CaseFeedPage() {
         </div>
       </div>
 
-      <div className="metrics-grid case-feed-summary">
-        <div className="metric">
-          <span className="metric-label">Showing</span>
-          <strong>{filteredCases.length}</strong>
-          <span className="metric-hint">Cases in the current view</span>
-        </div>
-        <div className="metric">
-          <span className="metric-label">Available</span>
-          <strong>{availableCases.length}</strong>
-          <span className="metric-hint">Not answered yet</span>
-        </div>
-        <div className="metric">
-          <span className="metric-label">Completed</span>
-          <strong>{completedCases.length}</strong>
-          <span className="metric-hint">Ready for review</span>
-        </div>
-      </div>
-
       {loading ? <LoadingBlock label="Loading the current training bank..." /> : null}
       <StatusBanner type="error" message={error} />
 
-      <section className="case-section">
+      {error && <button className="btn" onClick={() => setRetry(value => value + 1)}>Retry loading cases</button>}
+      {!loading && !error && <><section className="case-section">
         <div className="section-head">
           <div>
-            <h3>Available Cases</h3>
-            <p className="supporting-copy">Cases you have not answered yet.</p>
+            <h3>Available cases ({availableCases.length})</h3>
           </div>
         </div>
         <div className="case-grid">
@@ -121,16 +106,16 @@ function CaseFeedPage() {
         {!loading && !availableCases.length ? (
           <EmptyState
             title="No new cases in this view"
-            description="Try widening your search or clearing one of the filters to reveal more training cases."
+            description="No unanswered cases match this view."
+            action={(query || difficulty || contentType) && <button className="btn" onClick={() => { setQuery(""); setDifficulty(""); setContentType(""); }}>Clear filters</button>}
           />
         ) : null}
       </section>
 
-      <section className="case-section">
+      {completedCases.length > 0 && <section className="case-section">
         <div className="section-head">
           <div>
-            <h3>Completed Cases</h3>
-            <p className="supporting-copy">Review cases you have already answered.</p>
+            <h3>Completed cases ({completedCases.length})</h3>
           </div>
         </div>
         <div className="case-grid">
@@ -138,13 +123,7 @@ function CaseFeedPage() {
             <CaseCard key={item._id} item={item} />
           ))}
         </div>
-        {!loading && !completedCases.length ? (
-          <EmptyState
-            title="No completed cases yet"
-            description="Finished cases appear here so you can revisit them, compare your choices, and study the explanations again."
-          />
-        ) : null}
-      </section>
+      </section>}</>}
     </section>
   );
 }

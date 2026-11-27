@@ -61,7 +61,7 @@ function CaseDetailPage() {
   return (
     <section className="panel">
       <div className="detail-header">
-        <button className="btn btn-ghost" type="button" onClick={() => navigate(-1)}>
+        <button className="btn btn-ghost" type="button" onClick={() => navigate("/cases")}>
           Back to cases
         </button>
         <div className="detail-meta-row">
@@ -70,10 +70,9 @@ function CaseDetailPage() {
         </div>
       </div>
       <h2>{caseItem.title}</h2>
-      <p className="supporting-copy">
-        Review the details below, decide whether this looks legitimate, then submit your answer.
-      </p>
+
       <div className="case-body-card">
+        {caseItem.senderInfo && <p className="evidence-sender">Sender <strong>{caseItem.senderInfo}</strong></p>}
         <p className="case-content">{caseItem.content}</p>
       </div>
       {caseItem.links?.length ? (
@@ -101,7 +100,7 @@ function CaseDetailPage() {
       )}
 
       {result ? (
-        <div className="result-box">
+        <div className="result-box" role="status">
           <p>
             <strong>{result.isCorrect ? "Correct" : "Not correct"}</strong> (+{result.pointsAwarded}{" "}
             points)

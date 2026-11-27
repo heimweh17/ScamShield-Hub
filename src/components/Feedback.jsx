@@ -3,7 +3,6 @@ function StatusBanner({ type = "info", message }) {
 
   return (
     <div className={`status-banner ${type}`} role={type === "error" ? "alert" : "status"}>
-      <strong>{type === "error" ? "Something went wrong" : type === "success" ? "Success" : "Update"}</strong>
       <span>{message}</span>
     </div>
   );

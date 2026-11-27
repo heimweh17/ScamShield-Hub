@@ -13,8 +13,8 @@ function Layout() {
 
   const navItems = useMemo(
     () => [
-      { to: "/", label: "Home" },
-      { to: "/cases", label: "Case Feed" },
+      { to: "/", label: "Practice" },
+      { to: "/cases", label: "Case library" },
       { to: "/leaderboard", label: "Leaderboard" },
       ...(user ? [{ to: "/messages", label: "Messages" }] : []),
       { to: user ? "/profile" : "/auth", label: user ? "Profile" : "Login" },
@@ -28,16 +28,16 @@ function Layout() {
       <header className="topbar">
         <div className="topbar-left">
           <Link to="/" className="brand">
-            <span className="brand-mark">SH</span>
+            <img src="/scamshield-favicon.svg" width="34" height="34" alt="" />
             <span>
               ScamShield Hub
-              <small>Phishing practice and peer learning</small>
             </span>
           </Link>
           <button
             className="nav-toggle"
             type="button"
             onClick={() => setNavOpen((value) => !value)}
+            aria-controls="workspace-nav"
             aria-expanded={navOpen}
             aria-label="Toggle navigation"
           >
@@ -46,7 +46,7 @@ function Layout() {
             <span />
           </button>
         </div>
-        <nav className={`nav ${navOpen ? "open" : ""}`}>
+        <nav id="workspace-nav" aria-label="Workspace" className={`nav ${navOpen ? "open" : ""}`}>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to}>
               {item.label}
@@ -65,7 +65,7 @@ function Layout() {
               </button>
             </>
           ) : (
-            <Link to="/auth" className="chip chip-action">
+            <Link to="/auth?mode=register" className="chip chip-action">
               Register
             </Link>
           )}

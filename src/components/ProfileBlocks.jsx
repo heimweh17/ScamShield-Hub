@@ -12,7 +12,7 @@ export function MetricCard({ label, value, hint }) {
 
 export function ProgressChart({ value }) {
   return (
-    <div className="progress-chart" aria-label={`Progress ${value}%`}>
+    <div className="progress-chart" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-label={`Progress ${value}%`}>
       <div className="progress-chart-fill" style={{ width: `${value}%` }} />
     </div>
   );
@@ -29,8 +29,9 @@ export function PerformanceDots({ items }) {
         <div
           key={item.id}
           className={`streak-dot ${item.isCorrect ? "success" : "danger"}`}
+          aria-label={`${item.caseTitle}: ${item.isCorrect ? "Correct" : "Incorrect"}`}
           title={`${item.caseTitle} | ${item.isCorrect ? "Correct" : "Incorrect"}`}
-        />
+        >{item.isCorrect ? "+" : "−"}</div>
       ))}
     </div>
   );
