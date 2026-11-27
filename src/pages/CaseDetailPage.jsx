@@ -15,16 +15,22 @@ function CaseDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let current = true;
+    setCaseItem(null);
+    setResult(null);
     setLoading(true);
     setError("");
     Promise.all([api(`/cases/${id}`), api(`/cases/${id}/comments`)])
       .then(([caseResult, commentsResult]) => {
+        if (!current) return;
+        setResult(caseResult.result);
         setCaseItem(caseResult.case);
         setComments(commentsResult.comments);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [id]);
+      .catch((err) => { if (current) setError(err.message); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [id, user?.id]);
 
   async function submitVote(answer) {
     try {
@@ -81,7 +87,7 @@ function CaseDetailPage() {
         </p>
       ) : null}
 
-      {user ? (
+      {user && result ? null : user ? (
         <div className="vote-row">
           <button className="btn btn-danger" type="button" onClick={() => submitVote("scam")}>
             Scam

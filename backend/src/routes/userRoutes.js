@@ -268,7 +268,7 @@ function buildAnsweredCases(votes) {
 async function buildUserProfilePayload(user, viewerRole = "public") {
   const [userVotes, commentsCount, publishedCasesCount, recentComments, friendDoc] = await Promise.all([
     Vote.find({ userId: user._id })
-      .populate("caseId", "title difficulty contentType")
+      .populate("caseId", "title difficulty contentType isPublished")
       .sort({ createdAt: -1 })
       .lean(),
     Comment.countDocuments({ userId: user._id }),
@@ -285,10 +285,11 @@ async function buildUserProfilePayload(user, viewerRole = "public") {
       .lean(),
   ]);
 
-  const recentVotes = userVotes.slice(0, 6);
-  const answeredCases = buildAnsweredCases(userVotes);
+  const publishedVotes = userVotes.filter(vote => vote.caseId?.isPublished);
+  const recentVotes = publishedVotes.slice(0, 6);
+  const answeredCases = buildAnsweredCases(publishedVotes);
   const progressPercent = publishedCasesCount
-    ? Math.round((user.completedCases.length / publishedCasesCount) * 100)
+    ? Math.round((publishedVotes.length / publishedCasesCount) * 100)
     : 0;
 
   const confidenceScore = Math.min(
@@ -333,12 +334,12 @@ async function buildUserProfilePayload(user, viewerRole = "public") {
     accuracyRate: user.accuracyRate,
     totalVotes: user.totalVotes,
     correctVotes: user.correctVotes,
-    completedCasesCount: user.completedCases.length,
+    completedCasesCount: publishedVotes.length,
     badges: allBadges,
     commentsCount,
     progressPercent,
     confidenceScore,
-    remainingCasesCount: Math.max(0, publishedCasesCount - user.completedCases.length),
+    remainingCasesCount: Math.max(0, publishedCasesCount - publishedVotes.length),
     recentPerformance: recentVotes.map((vote) => ({
       id: vote._id,
       caseId: vote.caseId?._id || null,

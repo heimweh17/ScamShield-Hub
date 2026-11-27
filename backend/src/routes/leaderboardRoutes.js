@@ -192,11 +192,10 @@ router.post("/groups/:groupId/join", requireAuth, async (req, res) => {
     if (!group) return res.status(404).json({ error: "Group not found" });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const alreadyMember = group.members.some((memberId) => memberId.toString() === userId.toString());
-    if (!alreadyMember) {
-      group.members.push(userId);
-      await group.save();
+    if (!group.createdBy.equals(req.user._id) && userId !== String(req.user._id)) {
+      return res.status(403).json({ error: "Only the creator can add other members" });
     }
+    await LeaderboardGroup.updateOne({ _id: groupId }, { $addToSet: { members: userId } });
 
     return res.json({ message: "Added to group", userId, groupId });
   } catch {
@@ -217,8 +216,11 @@ router.delete("/groups/:groupId/members/:userId", requireAuth, async (req, res) 
       return res.status(404).json({ error: "Group not found" });
     }
 
-    group.members = group.members.filter((memberId) => memberId.toString() !== userId.toString());
-    await group.save();
+    if (!group.createdBy.equals(req.user._id) && userId !== String(req.user._id)) {
+      return res.status(403).json({ error: "Only the creator can remove other members" });
+    }
+    if (String(group.createdBy) === userId) return res.status(400).json({ error: "The creator must remain in the group" });
+    await LeaderboardGroup.updateOne({ _id: groupId }, { $pull: { members: userId } });
 
     return res.json({ message: "Removed from group" });
   } catch {

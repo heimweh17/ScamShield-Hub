@@ -7,6 +7,8 @@ import { useAuth } from "../context/AuthContext";
 
 function MemberPicker({ group, onClose, onMembersChanged }) {
   const [username, setUsername] = useState("");
+  const { user } = useAuth();
+  const owner = group.createdBy === user?.id;
   const [members, setMembers] = useState([]);
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
@@ -73,7 +75,7 @@ function MemberPicker({ group, onClose, onMembersChanged }) {
           <button className="icon-button" onClick={onClose} type="button">Close</button>
         </div>
 
-        <p className="supporting-copy">
+        {owner && <><p className="supporting-copy">
           Add usernames here if you want a smaller leaderboard for classmates or friends.
         </p>
 
@@ -95,6 +97,14 @@ function MemberPicker({ group, onClose, onMembersChanged }) {
           </button>
         </div>
 
+        </>}
+        {!owner && !members.some(member => member.id === user?.id) && <button className="btn" onClick={async () => {
+          try {
+            await api(`/leaderboard/groups/${group.id}/join`, { method: "POST", body: JSON.stringify({ userId: user.id }) });
+            await loadMembers();
+            onMembersChanged();
+          } catch (err) { setError(err.message); }
+        }}>Join group</button>}
         {error ? <p className="error">{error}</p> : null}
 
         <div className="modal-section">
@@ -106,13 +116,13 @@ function MemberPicker({ group, onClose, onMembersChanged }) {
               {members.map((member) => (
                 <li key={member.id} className="member-list-item">
                   <span>{member.username}</span>
-                  <button
+                  {member.id !== group.createdBy && (owner || member.id === user?.id) && <button
                     className="btn btn-danger btn-small"
                     onClick={() => removeUser(member.id)}
                     type="button"
                   >
-                    Remove
-                  </button>
+                    {owner ? "Remove" : "Leave"}
+                  </button>}
                 </li>
               ))}
             </ul>

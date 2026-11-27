@@ -114,6 +114,7 @@ router.delete("/cases/:id", async (req, res) => {
 
   await Promise.all([
     Vote.deleteMany({ caseId: deleted._id }),
+    User.updateMany({ completedCases: deleted._id }, { $pull: { completedCases: deleted._id } }),
     Comment.deleteMany({ caseId: deleted._id }),
   ]);
 

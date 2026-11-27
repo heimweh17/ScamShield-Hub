@@ -35,7 +35,7 @@ router.get("/", attachOptionalAuth, async (req, res) => {
 
   const cases = await CaseModel.find(filter)
     .sort({ createdAt: -1 })
-    .select("-__v")
+    .select("-__v -correctAnswer -explanation")
     .lean();
   return res.json({
     cases: cases.map((caseItem) => {
@@ -49,14 +49,17 @@ router.get("/", attachOptionalAuth, async (req, res) => {
   });
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", attachOptionalAuth, async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ error: "Invalid case id" });
   }
 
   const caseItem = await CaseModel.findOne({ _id: req.params.id, isPublished: true }).lean();
   if (!caseItem) return res.status(404).json({ error: "Case not found" });
-  return res.json({ case: caseItem });
+  const { correctAnswer, explanation, ...scenario } = caseItem;
+  const vote = req.user && await Vote.findOne({ userId: req.user._id, caseId: caseItem._id })
+    .select("answer isCorrect pointsAwarded -_id").lean();
+  return res.json({ case: scenario, result: vote ? { ...vote, correctAnswer, explanation } : null });
 });
 
 router.post("/:id/votes", requireAuth, async (req, res) => {
